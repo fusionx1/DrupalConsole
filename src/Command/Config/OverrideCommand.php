@@ -10,12 +10,38 @@ namespace Drupal\Console\Command\Config;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Drupal\Console\Command\ContainerAwareCommand;
-use Drupal\Console\Style\DrupalStyle;
-use Drupal\Component\Serialization\Yaml;
+use Drupal\Console\Core\Command\Command;
+use Drupal\Core\Config\CachedStorage;
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Console\Core\Style\DrupalStyle;
 
-class OverrideCommand extends ContainerAwareCommand
+class OverrideCommand extends Command
 {
+    /**
+     * @var CachedStorage
+     */
+    protected $configStorage;
+
+    /**
+     * @var ConfigFactory
+     */
+    protected $configFactory;
+
+    /**
+     * OverrideCommand constructor.
+     *
+     * @param CachedStorage $configStorage
+     * @param ConfigFactory $configFactory
+     */
+    public function __construct(
+        CachedStorage $configStorage,
+        ConfigFactory $configFactory
+    ) {
+        $this->configStorage = $configStorage;
+        $this->configFactory = $configFactory;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -26,8 +52,16 @@ class OverrideCommand extends ContainerAwareCommand
                 InputArgument::REQUIRED,
                 $this->trans('commands.config.override.arguments.name')
             )
-            ->addArgument('key', InputArgument::REQUIRED, $this->trans('commands.config.override.arguments.key'))
-            ->addArgument('value', InputArgument::REQUIRED, $this->trans('commands.config.override.arguments.value'));
+            ->addArgument(
+            	'key', 
+            	InputArgument::REQUIRED, 
+            	$this->trans('commands.config.override.arguments.key'))
+            ->addArgument(
+            	'value', 
+            	InputArgument::REQUIRED, 
+            	$this->trans('commands.config.override.arguments.value')
+            )
+            ->setAliases(['co']);
     }
 
     /**
@@ -37,8 +71,7 @@ class OverrideCommand extends ContainerAwareCommand
     {
         $io = new DrupalStyle($input, $output);
         $name = $input->getArgument('name');
-        $configFactory = $this->getConfigFactory();
-        $names = $configFactory->listAll();
+        $names = $this->configFactory->listAll();
         if ($name) {
             if (!in_array($name, $names)) {
                 $io->warning(
@@ -59,9 +92,8 @@ class OverrideCommand extends ContainerAwareCommand
         }
         $key = $input->getArgument('key');
         if (!$key) {
-            $configStorage = $this->getConfigStorage();
-            if ($configStorage->exists($name)) {
-                $configuration = $configStorage->read($name);
+            if ($this->configStorage->exists($name)) {
+                $configuration = $this->configStorage->read($name);
             }
             $key = $io->choiceNoList(
                 $this->trans('commands.config.override.questions.key'),
@@ -88,7 +120,7 @@ class OverrideCommand extends ContainerAwareCommand
         $key = $input->getArgument('key');
         $value = $input->getArgument('value');
 
-        $config = $this->getConfigFactory()->getEditable($configName);
+        $config = $this->configFactory->getEditable($configName);
 
         $configurationOverrideResult = $this->overrideConfiguration($config, $key, $value);
 

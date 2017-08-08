@@ -1,114 +1,31 @@
 services:
-  parser:
-    class: Symfony\Component\Yaml\Parser
-  filesystem:
-    class: Symfony\Component\Filesystem\Filesystem
-  yaml:
-    class: Symfony\Component\Yaml\Yaml
-  config:
-    class: Drupal\Console\Config
-    arguments: ["@parser"]
-  requirement_checker:
-    class: Drupal\Console\Utils\RequirementChecker
-    arguments: ["@parser"]
-  redbean:
+  console.root:
+    class: SplString
+  console.redbean:
     class: RedBeanPHP\R
-  annotation_reader:
-    class: Doctrine\Common\Annotations\AnnotationReader
-  annotation_file_cache:
-    class: Doctrine\Common\Annotations\FileCacheReader
-    factory: [Drupal\Console\Annotations\CacheFactory, createFileCache]
-    arguments: ['@annotation_reader', '@config']
-  command_dependency_resolver:
-    class: Drupal\Console\Command\CommandDependencies
-    arguments: ["@annotation_file_cache"]
-  file_util:
-    class: Drupal\Console\Utils\File
-  translator:
-    class: Drupal\Console\Utils\Translator
-    arguments: ["@parser", "@filesystem"]
-  site:
-    class: Drupal\Console\Utils\Site
-    arguments: ["@parser"]
-  chain_queue:
-    class: Drupal\Console\Utils\ChainQueue
-  showfile:
-    class: Drupal\Console\Utils\ShowFile
-    arguments: ["@site", "@translator"]
-  about:
-    class: Drupal\Console\Command\AboutCommand
-    tags:
-      - { name: console.command }
-  check:
-    class: Drupal\Console\Command\CheckCommand
-    tags:
-      - { name: console.command }
-  complete:
-    class: Drupal\Console\Command\CompleteCommand
-    tags:
-      - { name: console.command }
-  init:
-    class: Drupal\Console\Command\InitCommand
-    tags:
-      - { name: console.command }
-  list:
-    class: Drupal\Console\Command\ListCommand
-    tags:
-      - { name: console.command }
-  help:
-    class: Drupal\Console\Command\HelpCommand
-    tags:
-      - { name: console.command }
-  server:
-    class: Drupal\Console\Command\ServerCommand
-    tags:
-      - { name: console.command }
-  cache_rebuild:
-    class: Drupal\Console\Command\CacheRebuildCommand
-    tags:
-      - { name: console.command }
-  cache_rebuild:
-    class: Drupal\Console\Command\CacheRebuildCommand
-    tags:
-      - { name: console.command }
-  plugin_debug:
-      class: Drupal\Console\Command\PluginDebugCommand
-      tags:
-        - { name: console.command }
-  container_debug:
-      class: Drupal\Console\Command\ContainerDebugCommand
-      tags:
-        - { name: console.command }
-  breakpoints_debug:
-      class: Drupal\Console\Command\Breakpoints\DebugCommand
-      tags:
-        - { name: console.command }
-  views_plugins_debug:
-      class: Drupal\Console\Command\Views\PluginsDebugCommand
-      tags:
-        - { name: console.command }
-  views_enable:
-      class: Drupal\Console\Command\Views\EnableCommand
-      tags:
-        - { name: console.command }
-  views_disable:
-      class: Drupal\Console\Command\Views\DisableCommand
-      tags:
-        - { name: console.command }
-  views_debug:
-      class: Drupal\Console\Command\Views\DebugCommand
-      tags:
-        - { name: console.command }
-  chain:
-      class: Drupal\Console\Command\Chain\ChainCommand
-      tags:
-        - { name: console.command }
-  chain_debug:
-      class: Drupal\Console\Command\Chain\ChainDebugCommand
-      tags:
-        - { name: console.command }
-  config_debug:
-      class: Drupal\Console\Command\Config\DebugCommand
-      tags:
-        - { name: console.command }
-
+  console.validator:
+    class: Drupal\Console\Utils\Validator
+    arguments: ['@console.extension_manager', '@console.translator_manager']
+  console.drupal_api:
+    class: Drupal\Console\Utils\DrupalApi
+    arguments: ['@app.root', '@entity_type.manager', '@http_client']
+  console.create_node_data:
+    class: Drupal\Console\Utils\Create\NodeData
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@date.formatter', '@=service("console.drupal_api").getBundles()']
+  console.create_comment_data:
+    class: Drupal\Console\Utils\Create\CommentData
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@date.formatter']
+  console.create_term_data:
+    class: Drupal\Console\Utils\Create\TermData
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@date.formatter', '@=service("console.drupal_api").getVocabularies()']
+  console.create_user_data:
+    class: Drupal\Console\Utils\Create\UserData
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@date.formatter', '@=service("console.drupal_api").getRoles()']
+  console.create_vocabulary_data:
+    class: Drupal\Console\Utils\Create\VocabularyData
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@date.formatter']
+  console.annotation_command_reader:
+    class: Drupal\Console\Annotations\DrupalCommandAnnotationReader
+  console.annotation_validator:
+    class: Drupal\Console\Utils\AnnotationValidator
+    arguments: ['@console.annotation_command_reader', '@console.extension_manager']
